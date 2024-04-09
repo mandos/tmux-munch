@@ -1,0 +1,10 @@
+# Editors
+.idea/
+*.swp
+*.swo
+*~
+
+# Nix
+.direnv
+.envrc
+result
