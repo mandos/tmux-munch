@@ -12,14 +12,14 @@
 
       packages.${system}.default = pkgs.tmuxPlugins.mkTmuxPlugin
         {
-          pluginName = "picasso";
+          pluginName = "munch";
           version = "unstable-2024-03-01";
           src = builtins.fetchGit {
-            url = "/workspace/tmux/tmux-picasso";
+            url = "./.";
           };
           nativeBuildInputs = [ pkgs.makeWrapper ];
           postInstall = ''
-            substituteInPlace $target/picasso.tmux \
+            substituteInPlace $target/munch.tmux \
               --replace  \$CURRENT_DIR $target
           '';
         };
