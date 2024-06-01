@@ -43,7 +43,7 @@ If you want to customize theme, you can create theme file and set `@munch-theme`
 
 ### NixOS flakes
 
-
+It's working
 
 ## Development
 
