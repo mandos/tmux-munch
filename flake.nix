@@ -1,36 +1,45 @@
 {
-
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
   };
-  outputs = { nixpkgs, ... }:
-    let
-      system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
-    in
-    {
 
-      packages.${system}.default = pkgs.tmuxPlugins.mkTmuxPlugin
-        {
+  outputs = { self, nixpkgs, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        devPackages = [
+          (pkgs.bats.withLibraries (p: [ p.bats-support p.bats-assert ]))
+          pkgs.watchexec
+        ];
+        plugin = pkgs.tmuxPlugins.mkTmuxPlugin {
           pluginName = "munch";
-          version = "unstable-2024-03-01";
-          src = builtins.fetchGit {
-            url = "./.";
-          };
-          nativeBuildInputs = [ pkgs.makeWrapper ];
+          version = "unstable";
+          src = self;
           postInstall = ''
-            substituteInPlace $target/munch.tmux \
-              --replace  \$CURRENT_DIR $target
+            ls -al $target && \
+              substituteInPlace $target/munch.tmux \
+                --replace  \$CURRENT_DIR $target
           '';
         };
+      in
+      {
+        packages.default = plugin;
 
-      devShells.${system}.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          nixpkgs-fmt
-          shellcheck
-          shfmt
-          watchexec
-        ];
-      };
-    };
+        packages.dev = (pkgs.symlinkJoin
+          {
+            name = "dev-environment";
+            paths = [
+              plugin
+              plugin.buildInputs
+              pkgs.tmux
+              pkgs.bashInteractive
+              pkgs.busybox
+            ] ++ devPackages;
+          });
+
+        devShell = pkgs.mkShell {
+          buildInputs = devPackages;
+        };
+      }
+    );
 }
